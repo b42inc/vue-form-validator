@@ -32,22 +32,26 @@ export interface Validator {
 }
 
 export declare class FieldValue {
+    constructor(name:string, initValue:string, validations:FiledValueValidations)
     name: string
     value: string
     valid: boolean
     errors: {[key:string]: string}
-    validations:FiledValueValidations
+    _validations: FiledValueValidations
+    set validations(v:FiledValueValidations)
+    get validations():FiledValueValidations
     resetError():void
     hasError():boolean
     eachValidation(el:HTMLFieldElement, eventName:string, callback:Function):void
 }
 
 export declare class Field {
-    constructor(el:HTMLFieldElement, vnode:VNode, value:FieldValue, options?:FieldOptions)
-    value:string
-    name:string
-    noValidate:boolean
-    errors:{[key:string]:string}
+    constructor(el:HTMLFieldElement, vnode:VNode, value:FieldValue, options:FieldOptions)
+    get errors():{[key:string]:string}
+    get noValidate():boolean
+    get name():string
+    get value():string
+    set value(value:string) 
     preventResolve(dynamicErrorMessage:string):void
     preventReject():void
     updateEvent(events:string[]):void

@@ -1,5 +1,6 @@
 import Vue, { VNode } from 'vue'
-import { Field, HTMLFieldElement, FieldValue } from '../../@types'
+import { HTMLFieldElement, FieldValue } from '../../@types'
+import { Field } from '../Field'
 import { DirectiveBinding } from 'vue/types/options'
 const map = new WeakMap()
 

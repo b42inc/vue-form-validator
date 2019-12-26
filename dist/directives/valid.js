@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import { Field } from '../../@types';
+import { Field } from '../Field';
 const map = new WeakMap();
 Vue.directive('valid', {
     bind(el, binding, vnode) {
