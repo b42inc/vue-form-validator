@@ -25,7 +25,6 @@
   },
   "homepage": "https://github.com/b42inc/vue-form-validator#readme",
   "dependencies": {
-    "@types/vue": "2.0.0",
     "b42-utility": "0.0.1",
     "vue": "2.6.11"
   },
