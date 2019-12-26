@@ -1,5 +1,5 @@
 import Vue, { VNode } from 'vue'
-import { Field, HTMLFieldElement, FieldValue } from '../Field'
+import { Field, HTMLFieldElement, FieldValue } from '../../@types'
 import { DirectiveBinding } from 'vue/types/options'
 const map = new WeakMap()
 
@@ -21,7 +21,7 @@ Vue.directive('valid', {
     // componentUpdated(el, binding, vnode, oldVnode) {},
 
     unbind(el:HTMLElement) {
-        const filed = map.get(el)
+        const filed:Field = map.get(el)
         if (filed) {
             filed.dispose()
             map.delete(el)

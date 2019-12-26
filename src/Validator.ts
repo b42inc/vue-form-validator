@@ -1,17 +1,10 @@
-import { HTMLFieldElement } from "./Field"
-
-export type Validator = (value:string, options?:any) => boolean
-export type ValidateError = string | ((value:string, options:any, el:HTMLFieldElement) => string)
-export type ValidateRule = {
-    validate:Validator,
-    error:ValidateError,
-    defaultOptions:any
-}
-export type ValidateRuleset = string | {
-    rule:string,
-    error?:ValidateError,
-    options?:any
-}
+import {
+    HTMLFieldElement,
+    ValidateFunc,
+    ValidateError,
+    ValidateRule,
+    ValidateRuleset
+} from '../@types'
 
 const RULES:{[code:string]:ValidateRule} = {}
 const RULESET:{[code:string]:ValidateRuleset[]} = {}
@@ -79,7 +72,7 @@ export const Validator = {
         }, errors)
     },
 
-    defineRule(validCode:string, validate:Validator, error:ValidateError, defaultOptions?:any) {
+    defineRule(validCode:string, validate:ValidateFunc, error:ValidateError, defaultOptions?:any) {
         RULES[validCode] = {
             validate,
             error,

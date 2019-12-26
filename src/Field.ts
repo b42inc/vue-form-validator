@@ -1,13 +1,7 @@
 import Vue from 'vue'
 import { Validator } from './Validator'
 import { VNode } from 'vue/types/umd'
-
-export type HTMLFieldElement = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-
-export type FieldOptions = {
-    validEvent?: string[],
-    preventInvalid?: boolean
-}
+import { HTMLFieldElement, FieldOptions, FiledValueValidations } from '../@types'
 
 function getNativeAttribute($el:HTMLFieldElement):string {
     const {
@@ -43,7 +37,7 @@ function emit(vnode:VNode, name:string, data:any) {
     }
 }
 
-export class Errors {
+class Errors {
     private _list:{[key:string]:string} = {}
 
     add(attr:string, error:string) {
@@ -68,8 +62,6 @@ export class Errors {
         return {...this._list}
     }
 }
-
-type FiledValueValidations = {[eventName:string]:string | string[]}
 
 export class FieldValue {
     name: string

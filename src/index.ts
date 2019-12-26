@@ -1,6 +1,7 @@
+// regist directive
 import './directives/valid'
 
-// rules
+// import preset rules
 import './rules/jp'
 import './rules/max'
 import './rules/maxlength'
@@ -13,5 +14,11 @@ import './rules/step'
 import './rules/string'
 import './rules/tel'
 
-export * from './Field'
-export * from './Validator'
+export {
+    FieldValue,
+    Field
+} from './Field'
+
+export {
+    Validator
+} from './Validator'

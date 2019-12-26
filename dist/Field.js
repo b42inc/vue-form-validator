@@ -29,7 +29,7 @@ function emit(vnode, name, data) {
             handler(data);
     }
 }
-export class Errors {
+class Errors {
     constructor() {
         this._list = {};
     }
