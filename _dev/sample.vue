@@ -121,30 +121,30 @@ export default {
     methods: {
         // 設定済のvalidationを通過したら最後に発火
         // ここでfalseを返すとrejectにtrueを返すと正式にresolveとなる
-        handleConfirm({filed}) {
-            const {value, name} = filed
+        handleConfirm({field}) {
+            const {value, name} = field
             switch (name) {
                 case 're_password':
                     if (value !== this.password.value) {
-                        filed.preventResolve('パスワードと入力された内容が異なります。')
+                        field.preventResolve('パスワードと入力された内容が異なります。')
                     }
                     break
             }
         },
         // フォーム単体がresolveになったら発火
-        handleResolve({filed}) {
-            console.log(`${filed.name} is valid!`)
+        handleResolve({field}) {
+            console.log(`${field.name} is valid!`)
         },
         // フォーム単体がrejectになったら発火
-        handleReject({filed}) {
+        handleReject({field}) {
             // return falseでエラー扱いにしない
             // 例えば年齢制限のバリデーションをかけたい場合に
             // 年と月で誕生日を入力するフォームで、年と月のフォームを入れるタイミングなどによって
             // エラー判定が難しい場合はここで再度バリデーションをかけて最終的なエラー扱いを決める
-            console.error(`${filed.name} is invalid!`)
+            console.error(`${field.name} is invalid!`)
         },
         // フォーム全体がresolveになったら発火
-        handleSubmit() {debugger
+        handleSubmit() {
             if (!this.allClear) {
                 return
             }

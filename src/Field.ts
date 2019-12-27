@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import { Validator } from './Validator'
 import { VNode } from 'vue/types/umd'
-import { HTMLFieldElement, FieldOptions, FiledValueValidations } from '../@types'
+import { HTMLFieldElement, FieldOptions, FieldValueValidations } from '../@types'
 
 function getNativeAttribute($el:HTMLFieldElement):string {
     const {
@@ -68,9 +68,9 @@ export class FieldValue {
     value: string = ''
     valid: boolean = false
     errors: {[key:string]: string} = {}
-    _validations: FiledValueValidations = {}
+    _validations: FieldValueValidations = {}
 
-    constructor(name:string, initValue:string, validations:FiledValueValidations) {
+    constructor(name:string, initValue:string, validations:FieldValueValidations) {
         this.name = name
         this.validations = validations
         Vue.set(this, 'value', initValue)
@@ -87,8 +87,8 @@ export class FieldValue {
         return errors && !!Object.keys(errors).length
     }
 
-    set validations(validations:FiledValueValidations) {
-        const _validations:FiledValueValidations = {}
+    set validations(validations:FieldValueValidations) {
+        const _validations:FieldValueValidations = {}
 
         for (const eventName in validations) {
             const code = validations[eventName]
@@ -262,9 +262,9 @@ export class Field {
         const { type } = e
         const arg:{
             event:Event,
-            filed: Field,
+            field: Field,
             errors:{[x: string]: string} | null
-        } = { event: e, filed: this, errors: null }
+        } = { event: e, field: this, errors: null }
 
         this._prepareValidate()
         

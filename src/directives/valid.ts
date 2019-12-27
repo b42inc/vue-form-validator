@@ -11,12 +11,12 @@ export default (Vue:VueConstructor) => {
         bind(el:HTMLElement, binding:DirectiveBinding, vnode:VNode) {
             const { prevent } = binding.modifiers
             const value:FieldValue = binding.value
-            const filed = new Field(el as HTMLFieldElement, vnode, value, {
+            const field = new Field(el as HTMLFieldElement, vnode, value, {
                 preventInvalid: !!prevent,
                 validEvent: Object.keys(value.validations)
             })
 
-            map.set(el, filed)
+            map.set(el, field)
         },
         
         // TODO: 更新に対応させる
@@ -25,9 +25,9 @@ export default (Vue:VueConstructor) => {
         // componentUpdated(el, binding, vnode, oldVnode) {},
 
         unbind(el:HTMLElement) {
-            const filed:Field = map.get(el)
-            if (filed) {
-                filed.dispose()
+            const field:Field = map.get(el)
+            if (field) {
+                field.dispose()
                 map.delete(el)
             }
         }

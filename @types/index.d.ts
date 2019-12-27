@@ -5,7 +5,7 @@ export type FieldOptions = {
     preventInvalid?: boolean
 }
 
-export type FiledValueValidations = {[eventName:string]:string | string[]}
+export type FieldValueValidations = {[eventName:string]:string | string[]}
 
 export type ValidateFunc = (value:string, options?:any) => boolean
 
