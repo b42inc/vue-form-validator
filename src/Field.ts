@@ -155,8 +155,10 @@ export class Field {
     // PUBLIC METHODS
     //=============================================
 
-    preventResolve(dynamicErrorMessage:string) {
-        this._errorMessage = dynamicErrorMessage
+    preventResolve(dynamicErrorMessage?:string) {
+        if (dynamicErrorMessage) {
+            this._errorMessage = dynamicErrorMessage
+        }
         this._preventResolve = true
     }
 

@@ -124,8 +124,13 @@ export default {
         // 設定済のvalidationを通過したら最後に発火
         // ここでfalseを返すとrejectにtrueを返すと正式にresolveとなる
         handleConfirm({filed}) {
-            if (filed.name === 're_password' && filed.value !== this.password.value) {
-                filed.preventResolve()
+            const {value, name} = filed
+            switch (name) {
+                case 're_password':
+                    if (value !== this.password.value) {
+                        filed.preventResolve('パスワードと入力された内容が異なります。')
+                    }
+                    break
             }
         },
         // フォーム単体がresolveになったら発火
