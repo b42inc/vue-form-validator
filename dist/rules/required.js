@@ -1,5 +1,7 @@
-import { Validator } from '../Validator';
-Validator.defineRule('required', (value) => !!value.trim(), (_value, _options, el) => {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const Validator_1 = require("../Validator");
+Validator_1.Validator.defineRule('required', (value) => !!value.trim(), (_value, _options, el) => {
     if (el.tagName.toLowerCase() === 'select') {
         return 'リスト内の項目を選択してください。';
     }

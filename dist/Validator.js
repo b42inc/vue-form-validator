@@ -1,3 +1,5 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const RULES = {};
 const RULESET = {};
 function getError(el, error, options) {
@@ -38,7 +40,7 @@ function executeRule(el, ruleset) {
     }
     return rule.validate(el.value, options) ? null : getError(el, error, options);
 }
-export const Validator = {
+exports.Validator = {
     check(code, el) {
         const errors = [];
         if (code === null) {

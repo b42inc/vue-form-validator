@@ -1,3 +1,12 @@
+export {
+    FieldValue,
+    Field
+} from './Field'
+
+export {
+    Validator
+} from './Validator'
+
 // regist directive
 import './directives/valid'
 
@@ -13,12 +22,3 @@ import './rules/required'
 import './rules/step'
 import './rules/string'
 import './rules/tel'
-
-export {
-    FieldValue,
-    Field
-} from './Field'
-
-export {
-    Validator
-} from './Validator'

@@ -1,8 +1,10 @@
-import { Validator } from '../Validator';
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const Validator_1 = require("../Validator");
 function round(v) {
     return Math.round(v * 10000) / 10000;
 }
-Validator.defineRule('step', (value, num) => parseFloat(value) % parseFloat(num) === 0, (value, num) => {
+Validator_1.Validator.defineRule('step', (value, num) => parseFloat(value) % parseFloat(num) === 0, (value, num) => {
     const _v = parseFloat(value);
     const _n = parseFloat(num);
     const prev = _v - (_v % _n) || 0;

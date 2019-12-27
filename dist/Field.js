@@ -1,5 +1,10 @@
-import Vue from 'vue';
-import { Validator } from './Validator';
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const vue_1 = __importDefault(require("vue"));
+const Validator_1 = require("./Validator");
 function getNativeAttribute($el) {
     const { valueMissing, typeMismatch, patternMismatch, tooLong, tooShort, stepMismatch, rangeOverflow, rangeUnderflow } = $el.validity;
     if (valueMissing)
@@ -52,7 +57,7 @@ class Errors {
         return { ...this._list };
     }
 }
-export class FieldValue {
+class FieldValue {
     constructor(name, initValue, validations) {
         this.value = '';
         this.valid = false;
@@ -60,9 +65,9 @@ export class FieldValue {
         this._validations = {};
         this.name = name;
         this.validations = validations;
-        Vue.set(this, 'value', initValue);
-        Vue.set(this, 'errors', {});
-        Vue.set(this, 'valid', false);
+        vue_1.default.set(this, 'value', initValue);
+        vue_1.default.set(this, 'errors', {});
+        vue_1.default.set(this, 'valid', false);
     }
     resetError() {
         this.errors = {};
@@ -89,14 +94,15 @@ export class FieldValue {
         }
         for (let i = 0, len = validations.length, validCode, errors; i < len; i++) {
             validCode = validations[i];
-            errors = Validator.check(validCode, el);
+            errors = Validator_1.Validator.check(validCode, el);
             if (errors && errors.length) {
                 errors.forEach(error => error && callback(error.msg, error.rule));
             }
         }
     }
 }
-export class Field {
+exports.FieldValue = FieldValue;
+class Field {
     constructor(el, vnode, value, options = {}) {
         this._preventResolve = false;
         this._preventReject = false;
@@ -280,3 +286,4 @@ export class Field {
         return this._$el.validationMessage;
     }
 }
+exports.Field = Field;
