@@ -12,6 +12,7 @@
     "url": "git+https://github.com/b42inc/vue-form-validator.git"
   },
   "files": [
+    "@types",
     "dist"
   ],
   "keywords": [
