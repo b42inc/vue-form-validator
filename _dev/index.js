@@ -1,6 +1,8 @@
 import Vue from 'vue'
 import Sample from './Sample'
-import '../src/index'
+import ValidDirective from '../src'
+
+Vue.use(ValidDirective)
 
 new Vue({
   el: '#sample',

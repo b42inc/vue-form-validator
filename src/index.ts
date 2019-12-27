@@ -1,16 +1,7 @@
-export {
-    FieldValue,
-    Field
-} from './Field'
-
-export {
-    Validator
-} from './Validator'
-
-// regist directive
-import './directives/valid'
-
-// import preset rules
+import directive from './directives/valid'
+import { PluginObject } from 'vue/types/umd'
+import { FieldValue, Field} from './Field'
+import { Validator } from './Validator'
 import './rules/jp'
 import './rules/max'
 import './rules/maxlength'
@@ -22,3 +13,11 @@ import './rules/required'
 import './rules/step'
 import './rules/string'
 import './rules/tel'
+
+export default {
+    install(Vue) {
+        directive(Vue)
+    }
+} as PluginObject<{}>
+
+export { FieldValue, Field, Validator }

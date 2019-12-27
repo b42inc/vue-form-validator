@@ -47,8 +47,7 @@
 </template>
 
 <script>
-import { Validator } from '../src/Validator'
-import { FieldValue } from '../src/Field'
+import { Validator, FieldValue } from '../src'
 
 Validator.defineRule(
     'id-allowed',
@@ -97,8 +96,7 @@ export default {
     data() {
         return {
             id: new FieldValue('id', 2220, {
-                input: 'id',
-                blur: ['required', 'id']
+                input: ['id', 'required']
             }),
             name: new FieldValue('name', 'John Paul'),
             email: new FieldValue('email', '', {

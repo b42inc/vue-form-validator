@@ -1,31 +1,35 @@
-import Vue, { VNode } from 'vue'
-import { HTMLFieldElement, FieldValue } from '../../@types'
-import { Field } from '../Field'
+import { VNode } from 'vue'
+import { HTMLFieldElement } from '../../@types'
+import { Field, FieldValue } from '../Field'
 import { DirectiveBinding } from 'vue/types/options'
-const map = new WeakMap()
+import { VueConstructor } from 'vue/types/umd'
 
-Vue.directive('valid', {
-    bind(el:HTMLElement, binding:DirectiveBinding, vnode:VNode) {
-        const { prevent } = binding.modifiers
-        const value:FieldValue = binding.value
-        const filed = new Field(el as HTMLFieldElement, vnode, value, {
-            preventInvalid: !!prevent,
-            validEvent: Object.keys(value.validations)
-        })
+export default (Vue:VueConstructor) => {
+    const map = new WeakMap()
 
-        map.set(el, filed)
-    },
-    
-    // TODO: 更新に対応させる
-    // inserted(el, binding, vnode) {},
-    // update(el, binding, vnode) {},
-    // componentUpdated(el, binding, vnode, oldVnode) {},
+    Vue.directive('valid', {
+        bind(el:HTMLElement, binding:DirectiveBinding, vnode:VNode) {
+            const { prevent } = binding.modifiers
+            const value:FieldValue = binding.value
+            const filed = new Field(el as HTMLFieldElement, vnode, value, {
+                preventInvalid: !!prevent,
+                validEvent: Object.keys(value.validations)
+            })
 
-    unbind(el:HTMLElement) {
-        const filed:Field = map.get(el)
-        if (filed) {
-            filed.dispose()
-            map.delete(el)
+            map.set(el, filed)
+        },
+        
+        // TODO: 更新に対応させる
+        // inserted(el, binding, vnode) {},
+        // update(el, binding, vnode) {},
+        // componentUpdated(el, binding, vnode, oldVnode) {},
+
+        unbind(el:HTMLElement) {
+            const filed:Field = map.get(el)
+            if (filed) {
+                filed.dispose()
+                map.delete(el)
+            }
         }
-    }
-})
+    })
+}
