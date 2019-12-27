@@ -1,6 +1,6 @@
 {
   "name": "@b42inc/vue-form-validator",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "vue form validator directive",
   "main": "dist/index.js",
   "scripts": {
