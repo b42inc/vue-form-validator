@@ -20,9 +20,9 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "esModuleInterop": true,
-    "typeRoots" : ["./@types"],
+    "typeRoots" : ["@types"],
     "declaration": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "@types"],
   "exclude": ["node_modules", "**/*.spec.ts"]
 }
