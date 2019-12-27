@@ -1,7 +1,6 @@
-import Vue from 'vue'
-import { Validator } from './Validator'
 import { VNode } from 'vue/types/umd'
-import { HTMLFieldElement, FieldOptions, FieldValueValidations } from '../@types'
+import { HTMLFieldElement, FieldOptions } from '../@types'
+import { FieldValue } from './FieldValue'
 
 function getNativeAttribute($el:HTMLFieldElement):string {
     const {
@@ -37,7 +36,7 @@ function emit(vnode:VNode, name:string, data:any) {
     }
 }
 
-class Errors {
+class FieldErrors {
     private _list:{[key:string]:string} = {}
 
     add(attr:string, error:string) {
@@ -63,62 +62,6 @@ class Errors {
     }
 }
 
-export class FieldValue {
-    name: string
-    value: string = ''
-    valid: boolean = false
-    errors: {[key:string]: string} = {}
-    _validations: FieldValueValidations = {}
-
-    constructor(name:string, initValue:string, validations:FieldValueValidations) {
-        this.name = name
-        this.validations = validations
-        Vue.set(this, 'value', initValue)
-        Vue.set(this, 'errors', {})
-        Vue.set(this, 'valid', false)
-    }
-
-    resetError() {
-        this.errors = {}
-    }
-
-    hasError() {
-        const { errors } = this
-        return errors && !!Object.keys(errors).length
-    }
-
-    set validations(validations:FieldValueValidations) {
-        const _validations:FieldValueValidations = {}
-
-        for (const eventName in validations) {
-            const code = validations[eventName]
-            _validations[eventName] = typeof code === 'string' ? [code] : code
-        }
-
-        this._validations = _validations
-    }
-
-    get validations() {
-        return this._validations
-    }
-
-    eachValidation(el:HTMLFieldElement, eventName:string, callback:Function) {
-        const validations = this.validations[eventName]
-
-        if (!validations || !validations.length) {
-            return
-        }
-
-        for (let i = 0, len = validations.length, validCode:string, errors:(null | {msg:String, rule:string})[]; i < len; i++) {
-            validCode = validations[i]
-            errors = Validator.check(validCode, el)
-            if (errors && errors.length) {
-                errors.forEach(error => error && callback(error.msg, error.rule))                
-            }
-        }
-    }
-}
-
 export class Field {
     private _$el: HTMLFieldElement
     private _vnode: VNode
@@ -126,7 +69,7 @@ export class Field {
     private _preventInvalid: boolean
     private _name:string
     private _type:string
-    private _errors:Errors
+    private _errors:FieldErrors
     private _preventResolve:boolean = false
     private _preventReject:boolean = false
     private _validEvent:string[]
@@ -144,7 +87,7 @@ export class Field {
         this._vnode = vnode
         this._value = value
         this._preventInvalid = options.preventInvalid || false
-        this._errors = new Errors()
+        this._errors = new FieldErrors()
         this._validEvent = options.validEvent || ['input', 'change']
         this._onValidate = this._onValidate.bind(this)
         this._onInvalid = this._onInvalid.bind(this)

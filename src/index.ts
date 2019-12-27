@@ -1,6 +1,7 @@
 import directive from './directives/valid'
 import { PluginObject } from 'vue/types/umd'
-import { FieldValue, Field} from './Field'
+import { Field} from './Field'
+import { FieldValue } from './FieldValue'
 import { Validator } from './Validator'
 import './rules/jp'
 import './rules/max'

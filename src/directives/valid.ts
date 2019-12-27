@@ -1,6 +1,7 @@
 import { VNode } from 'vue'
 import { HTMLFieldElement } from '../../@types'
-import { Field, FieldValue } from '../Field'
+import { Field } from '../Field'
+import { FieldValue } from '../FieldValue'
 import { DirectiveBinding } from 'vue/types/options'
 import { VueConstructor } from 'vue/types/umd'
 
