@@ -1,10 +1,7 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const vue_1 = __importDefault(require("vue"));
 const Validator_1 = require("./Validator");
+const DEFAULT_VALID_EVENTS = ['input', 'change'];
 function getNativeAttribute($el) {
     const { valueMissing, typeMismatch, patternMismatch, tooLong, tooShort, stepMismatch, rangeOverflow, rangeUnderflow } = $el.validity;
     if (valueMissing)
@@ -34,7 +31,7 @@ function emit(vnode, name, data) {
             handler(data);
     }
 }
-class Errors {
+class FieldErrors {
     constructor() {
         this._list = {};
     }
@@ -57,79 +54,41 @@ class Errors {
         return { ...this._list };
     }
 }
-class FieldValue {
-    constructor(name, initValue, validations) {
-        this.value = '';
-        this.valid = false;
-        this.errors = {};
-        this._validations = {};
-        this.name = name;
-        this.validations = validations;
-        vue_1.default.set(this, 'value', initValue);
-        vue_1.default.set(this, 'errors', {});
-        vue_1.default.set(this, 'valid', false);
-    }
-    resetError() {
-        this.errors = {};
-    }
-    hasError() {
-        const { errors } = this;
-        return errors && !!Object.keys(errors).length;
-    }
-    set validations(validations) {
-        const _validations = {};
-        for (const eventName in validations) {
-            const code = validations[eventName];
-            _validations[eventName] = typeof code === 'string' ? [code] : code;
-        }
-        this._validations = _validations;
-    }
-    get validations() {
-        return this._validations;
-    }
-    eachValidation(el, eventName, callback) {
-        const validations = this.validations[eventName];
-        if (!validations || !validations.length) {
-            return;
-        }
-        for (let i = 0, len = validations.length, validCode, errors; i < len; i++) {
-            validCode = validations[i];
-            errors = Validator_1.Validator.check(validCode, el);
-            if (errors && errors.length) {
-                errors.forEach(error => error && callback(error.msg, error.rule));
-            }
-        }
-    }
-}
-exports.FieldValue = FieldValue;
 class Field {
     constructor(el, vnode, value, options = {}) {
         this._preventResolve = false;
         this._preventReject = false;
+        this._validEvent = [];
+        this._valids = {};
+        this._unwatches = [];
         const { name, type } = el;
+        el.value = value.value;
         this._$el = el;
+        this._value = value;
         this._name = name;
         this._type = type || '';
         this._vnode = vnode;
-        this._value = value;
         this._preventInvalid = options.preventInvalid || false;
-        this._errors = new Errors();
-        this._validEvent = options.validEvent || ['input', 'change'];
+        this._errors = new FieldErrors();
         this._onValidate = this._onValidate.bind(this);
         this._onInvalid = this._onInvalid.bind(this);
-        this._on();
+        this._initEvent();
     }
     preventResolve(dynamicErrorMessage) {
-        this._errorMessage = dynamicErrorMessage;
+        if (dynamicErrorMessage) {
+            this._errors.add('prevent-resolve', dynamicErrorMessage);
+            this._errorMessage = dynamicErrorMessage;
+        }
         this._preventResolve = true;
     }
     preventReject() {
         this._preventReject = true;
     }
-    updateEvent(events) {
-        this._off();
-        this._validEvent = events;
-        this._on();
+    update(vnode, value) {
+        this._$el.value = value.value;
+        this._value = value;
+        this._vnode = vnode;
+        this._initEvent();
     }
     dispose() {
         this._off();
@@ -174,8 +133,33 @@ class Field {
     set value(value) {
         this._$el.value = value;
     }
+    _initEvent() {
+        const { _validEvent } = this;
+        const validEvents = ((validations) => {
+            const validEvents = Object.keys(validations);
+            return validEvents.length ? validEvents : DEFAULT_VALID_EVENTS;
+        })(this._value.validations);
+        if (_validEvent.length === validEvents.length && _validEvent.every(eventName => validEvents.includes(eventName))) {
+            return;
+        }
+        this._off();
+        this._validEvent = validEvents;
+        this._valids = validEvents.reduce((valids, eventName) => {
+            valids[eventName] = false;
+            return valids;
+        }, {});
+        this._on();
+    }
     _on() {
-        const { _$el, _validEvent } = this;
+        const { _$el, _validEvent, _value } = this;
+        this._unwatches = [
+            _value.watch('value', (newVal) => {
+                if (_$el.value !== newVal) {
+                    _$el.value = newVal;
+                }
+            }),
+            _value.watch('validations', () => this._initEvent())
+        ];
         _validEvent.forEach(eventName => {
             _$el.addEventListener(eventName, this._onValidate);
         });
@@ -185,6 +169,7 @@ class Field {
     }
     _off() {
         const { _$el, _validEvent } = this;
+        this._unwatches.forEach(unwatch => unwatch());
         _validEvent.forEach(eventName => {
             _$el.removeEventListener(eventName, this._onValidate);
         });
@@ -192,17 +177,17 @@ class Field {
     }
     _onValidate(e) {
         const { _vnode, _value } = this;
-        const { type } = e;
-        const arg = { event: e, filed: this, errors: null };
+        const { type: eventName } = e;
+        const arg = { event: e, field: this, errors: null };
         this._prepareValidate();
-        emit(_vnode, `validate:${type}`, arg);
+        emit(_vnode, `validate:${eventName}`, arg);
         emit(_vnode, 'validate', arg);
-        if (this._check(type)) {
-            emit(_vnode, `confirm:${type}`, arg);
+        if (this._checkValidity(eventName)) {
+            emit(_vnode, `confirm:${eventName}`, arg);
             emit(_vnode, 'confirm', arg);
             if (!this._preventResolve) {
                 _value.value = this.value;
-                _value.valid = true;
+                this._updateValid(eventName, true);
                 emit(_vnode, 'resolve', arg);
                 return;
             }
@@ -212,7 +197,7 @@ class Field {
         emit(_vnode, 'reject', arg);
         if (!this._preventReject) {
             _value.errors = errors;
-            _value.valid = false;
+            this._updateValid(eventName, false);
             this._reportValidity();
         }
     }
@@ -223,23 +208,35 @@ class Field {
         this._preventResolve = false;
         this._preventReject = false;
     }
-    _check(eventName) {
+    _checkValidity(eventName) {
+        const { _$el } = this;
+        return (this.noValidate ||
+            !_$el.willValidate ||
+            (_$el.checkValidity() && this._checkCustomValidityByEvent(eventName)));
+    }
+    _checkCustomValidityByEvent(eventName) {
         const { _$el, _value } = this;
+        const validations = _value.validations[eventName];
         let customError = '';
-        if (this.noValidate || !_$el.willValidate) {
-            return true;
-        }
-        if (!_$el.checkValidity()) {
-            return false;
-        }
-        _value.eachValidation(_$el, eventName, (error, attribute) => {
-            if (error) {
-                if (!customError) {
-                    customError = error;
+        if (validations && validations.length) {
+            const errors = [];
+            for (let i = 0, len = validations.length, errs; i < len; i++) {
+                errs = Validator_1.Validator.check(validations[i], _$el);
+                if (errs.length) {
+                    errors.push(...errs);
                 }
-                this._errors.add(attribute, error);
             }
-        });
+            for (let i = 0, len = errors.length, err; i < len; i++) {
+                err = errors[i];
+                if (!err || !err.msg) {
+                    continue;
+                }
+                if (!customError) {
+                    customError = err.msg;
+                }
+                this._errors.add(err.rule, err.msg);
+            }
+        }
         this._errorMessage = customError;
         return !customError;
     }
@@ -278,6 +275,23 @@ class Field {
             return false;
         }
         return true;
+    }
+    _updateValid(eventName, isValid) {
+        const { _valids, _value } = this;
+        if (eventName === 'init') {
+            if (isValid) {
+                for (const ev in _valids) {
+                    _valids[ev] = true;
+                }
+            }
+            else {
+                _valids.init = true;
+            }
+            _value.valid = isValid;
+            return;
+        }
+        _valids[eventName] = isValid;
+        _value.valid = isValid && Object.values(_valids).every(bool => bool);
     }
     set _errorMessage(error) {
         this._$el.setCustomValidity(error);

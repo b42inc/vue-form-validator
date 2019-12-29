@@ -1,6 +1,7 @@
-export { FieldValue, Field } from './Field';
-export { Validator } from './Validator';
-import './directives/valid';
+import { PluginObject } from 'vue/types/umd';
+import { Field } from './Field';
+import { FieldValue } from './FieldValue';
+import { Validator } from './Validator';
 import './rules/jp';
 import './rules/max';
 import './rules/maxlength';
@@ -12,3 +13,6 @@ import './rules/required';
 import './rules/step';
 import './rules/string';
 import './rules/tel';
+declare const _default: PluginObject<{}>;
+export default _default;
+export { FieldValue, Field, Validator };
