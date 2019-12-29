@@ -76,6 +76,7 @@ export class Field {
     private _preventResolve:boolean = false
     private _preventReject:boolean = false
     private _validEvent:string[] = []
+    private _valids:{[eventName:string]:boolean} = {}
     private _unwatches:Function[] = []
 
     constructor(el:HTMLFieldElement,
@@ -196,6 +197,10 @@ export class Field {
 
         this._off()
         this._validEvent = validEvents
+        this._valids = validEvents.reduce((valids, eventName) => {
+            valids[eventName] = false
+            return valids
+        }, {} as {[eventName:string]:boolean})
         this._on()
     }
 
@@ -255,7 +260,7 @@ export class Field {
             if (!this._preventResolve) {
                 // validateとconfirmイベント内で動的にvalueを変えることも可能
                 _value.value = this.value
-                _value.valid = true
+                this._updateValid(eventName, true)
                 emit(_vnode, 'resolve', arg)
                 return
             }
@@ -267,7 +272,7 @@ export class Field {
 
         if (!this._preventReject) {
             _value.errors = errors
-            _value.valid = false
+            this._updateValid(eventName, false)
             this._reportValidity()
         }
     }
@@ -370,6 +375,29 @@ export class Field {
         }
 
         return true
+    }
+
+    private _updateValid(eventName:string, isValid:boolean) {
+        const { _valids, _value } = this
+
+        if (eventName === 'init') {
+            if (isValid) {
+                // initがvalid === すべての条件をクリアしたことになるので
+                // 他のイベントフラグと合わせてtrueにする
+                for (const ev in _valids) {
+                    _valids[ev] = true
+                }
+            } else {
+                // initがinvalidの場合、initが発火するのは初回のみなので
+                // initのみtrueにしておく
+                _valids.init = true
+            }
+            _value.valid = isValid
+            return
+        }
+
+        _valids[eventName] = isValid
+        _value.valid = isValid && Object.values(_valids).every(bool => bool)
     }
 
     private set _errorMessage(error:string) {

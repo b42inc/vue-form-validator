@@ -79,6 +79,11 @@ export class FieldValue {
             _validations[eventName] = code ? (typeof code === 'string' ? [code] : code) : []
         }
 
+        // init event がある場合 その他含むすべてのvalidationを通す
+        if (_validations.init) {
+            _validations.init = Array.from(new Set(Object.values(_validations).flat(1)))
+        }
+
         this._vm.validations = _validations
     }
 

@@ -33,7 +33,6 @@ export default (Vue:VueConstructor) => {
                 preventInvalid: !!prevent
             })
 
-            // 初期値のvalidation
             if (value.hasEvent('init')) {
                 el.dispatchEvent(createEvent('init'))
             }
@@ -49,6 +48,10 @@ export default (Vue:VueConstructor) => {
                 const field:Field = map.get(el)
                 const value:FieldValue = binding.value
                 field.update(vnode, value)
+
+                if (value.hasEvent('init')) {
+                    el.dispatchEvent(createEvent('init'))
+                }
             }
         },
 

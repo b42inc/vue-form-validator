@@ -7,7 +7,6 @@
                      id="id"
                      name="id"
                      v-valid="id"
-                     readonly
                      @resolve="handleResolve"
                      @reject="handleReject" />
               <p v-if="id.hasError()">{{ id.errors }}</p>
