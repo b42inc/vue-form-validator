@@ -55,8 +55,8 @@ function executeRule(el:HTMLFieldElement, ruleset:ValidateRuleset) {
 }
 
 export const Validator = {
-    check(code:string, el:HTMLFieldElement):(null | {msg:String, rule:string})[] {
-        const errors:(null | {msg:String, rule:string})[] = []
+    check(code:string, el:HTMLFieldElement):(null | {msg:string, rule:string})[] {
+        const errors:(null | {msg:string, rule:string})[] = []
 
         if (code === null) {
             return []

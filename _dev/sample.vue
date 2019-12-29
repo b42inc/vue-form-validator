@@ -22,7 +22,7 @@
               <p v-if="name.hasError()">{{ name.errors }}</p>
           </label>
           <label for="email">
-              Email: <input type="email" v-valid.prevent="email">
+              Email: <input type="email" v-valid="email">
               <p v-if="email.hasError()">{{ email.errors }}</p>
           </label>
           <label for="password">
@@ -99,8 +99,9 @@ export default {
                 input: ['id', 'required']
             }),
             name: new FieldValue('name', 'John Paul'),
-            email: new FieldValue('email', '', {
-                blur: ['required']
+            email: new FieldValue('email', 'test', {
+                blur: ['required'],
+                init: []
             }),
             password: new FieldValue('password', '', {
                 blur: 'pw-blur',

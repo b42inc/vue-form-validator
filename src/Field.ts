@@ -1,6 +1,7 @@
 import { VNode } from 'vue/types/umd'
 import { HTMLFieldElement, FieldOptions } from '../@types'
 import { FieldValue } from './FieldValue'
+import { Validator } from './Validator'
 
 function getNativeAttribute($el:HTMLFieldElement):string {
     const {
@@ -80,6 +81,8 @@ export class Field {
                 options:FieldOptions = {}) {
         
         const { name, type } = el
+
+        el.value = value.value
        
         this._$el = el
         this._name = name
@@ -97,7 +100,6 @@ export class Field {
     //=============================================
     // PUBLIC METHODS
     //=============================================
-
     preventResolve(dynamicErrorMessage?:string) {
         if (dynamicErrorMessage) {
             this._errorMessage = dynamicErrorMessage
@@ -107,12 +109,6 @@ export class Field {
 
     preventReject() {
         this._preventReject = true
-    }
-
-    updateEvent(events:string[]) {
-        this._off()
-        this._validEvent = events
-        this._on()
     }
 
     dispose() {
@@ -202,7 +198,7 @@ export class Field {
 
     private _onValidate(e:Event) {
         const { _vnode, _value } = this
-        const { type } = e
+        const { type: eventName } = e
         const arg:{
             event:Event,
             field: Field,
@@ -211,12 +207,12 @@ export class Field {
 
         this._prepareValidate()
         
-        emit(_vnode, `validate:${type}`, arg)
+        emit(_vnode, `validate:${eventName}`, arg)
         emit(_vnode, 'validate', arg)
 
-        if (this._check(type)) {
+        if (this._checkValidity(eventName)) {
             
-            emit(_vnode, `confirm:${type}`, arg)
+            emit(_vnode, `confirm:${eventName}`, arg)
             emit(_vnode, 'confirm', arg)
             
             if (!this._preventResolve) {
@@ -246,27 +242,45 @@ export class Field {
         this._preventResolve = false
         this._preventReject = false
     }
-    
-    private _check(eventName:string):boolean {
+
+    private _checkValidity(eventName:string):boolean {
+        const { _$el } = this
+        return (
+            this.noValidate ||
+            !_$el.willValidate ||
+            (_$el.checkValidity() && this._checkCustomValidityByEvent(eventName))
+        )
+    }
+
+    private _checkCustomValidityByEvent(eventName:string):boolean {
         const { _$el, _value } = this
+        const validations = _value.validations[eventName]
         let customError = ''
 
-        if (this.noValidate || !_$el.willValidate) {
-            return true
-        }
+        if (validations && validations.length) {
+            const errors = []
 
-        if (!_$el.checkValidity()) {
-            return false
-        }
-
-        _value.eachValidation(_$el, eventName, (error:string, attribute:string) => {
-            if (error) {
-                if (!customError) {
-                    customError = error
+            for (let i = 0, len = validations.length, errs; i < len; i++) {
+                errs = Validator.check(validations[i], _$el)
+                if (errs.length) {
+                    errors.push(...errs)
                 }
-                this._errors.add(attribute, error)
             }
-        })
+
+            for (let i = 0, len = errors.length, err; i < len; i++) {
+                err = errors[i]
+
+                if (!err || !err.msg) {
+                    continue
+                }
+
+                if (!customError) {
+                    customError = err.msg
+                }
+
+                this._errors.add(err.rule, err.msg)
+            }
+        }
 
         this._errorMessage = customError
 
