@@ -135,16 +135,24 @@ export default {
         // ここでfalseを返すとrejectにtrueを返すと正式にresolveとなる
         handleConfirm({field}) {
             const {value, name} = field
+            const msg = 'パスワードと入力された内容が異なります。'
             switch (name) {
                 case 'password':
-                    if (this.rePassword.value && value !== this.rePassword.value) {
-                        // TODO:パスワード確認の方のエラーメッセージを更新できるようにしたい
-                        field.preventResolve('パスワードと入力された内容が異なります。')
+                    const { rePassword } = this
+                    const $repw = this.$el.querySelector('#re_password')
+                    if (rePassword.value && value !== rePassword.value) {
+                        rePassword.errors = {
+                            'prevent-resolve': msg,
+                            ...rePassword.errors
+                        }
+                        // v-valid.preventの場合は下記は不要
+                        $repw.setCustomValidity(msg)
+                        $repw.reportValidity()
                     }
                     break
                 case 're_password':
                     if (value !== this.password.value) {
-                        field.preventResolve('パスワードと入力された内容が異なります。')
+                        field.preventResolve(msg)
                     }
                     break
             }

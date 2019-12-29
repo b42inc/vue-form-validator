@@ -55,20 +55,20 @@ function executeRule(el:HTMLFieldElement, ruleset:ValidateRuleset) {
 }
 
 export const Validator = {
-    check(code:string, el:HTMLFieldElement):(null | {msg:string, rule:string})[] {
-        const errors:(null | {msg:string, rule:string})[] = []
+    check(code:string, el:HTMLFieldElement):{[key:string]:string} {
+        const errors:{[key:string]:string} = {}
 
         if (code === null) {
-            return []
+            return errors
         }
 
-        return (RULESET[code] || [code]).reduce((memo, ruleset) => {
+        return (RULESET[code] || [code]).reduce((errors, ruleset) => {
             const msg = executeRule(el, ruleset)
             const rule = typeof ruleset === 'string' ? ruleset : ruleset.rule
             if (rule && msg) {
-                memo.push({msg, rule})
+                errors[rule] = msg
             }
-            return memo
+            return errors
         }, errors)
     },
 

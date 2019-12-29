@@ -39,32 +39,6 @@ function emit(vnode:VNode, name:string, data:any) {
     }
 }
 
-class FieldErrors {
-    private _list:{[key:string]:string} = {}
-
-    add(attr:string, error:string) {
-        attr = attr.trim()
-        error = error.trim()
-        if (attr && error) {
-            this._list[attr] = error
-        }
-    }
-
-    reset() {
-        for (const attr in this._list) {
-            delete this._list[attr]
-        }
-    }
-
-    dispose() {
-        delete this._list
-    }
-
-    get list() {
-        return {...this._list}
-    }
-}
-
 export class Field {
     private _$el: HTMLFieldElement
     private _vnode: VNode
@@ -72,12 +46,12 @@ export class Field {
     private _preventInvalid: boolean
     private _name:string
     private _type:string
-    private _errors:FieldErrors
     private _preventResolve:boolean = false
     private _preventReject:boolean = false
     private _validEvent:string[] = []
     private _valids:{[eventName:string]:boolean} = {}
     private _unwatches:Function[] = []
+    private _tempErrors:{[key:string]:string} = {}
 
     constructor(el:HTMLFieldElement,
                 vnode:VNode,
@@ -94,7 +68,6 @@ export class Field {
         this._type = type || ''
         this._vnode = vnode
         this._preventInvalid = options.preventInvalid || false
-        this._errors = new FieldErrors()
         this._onValidate = this._onValidate.bind(this)
         this._onInvalid = this._onInvalid.bind(this)
         this._initEvent()
@@ -105,8 +78,7 @@ export class Field {
     //=============================================
     preventResolve(dynamicErrorMessage?:string) {
         if (dynamicErrorMessage) {
-            this._errors.add('prevent-resolve', dynamicErrorMessage)
-            this._errorMessage = dynamicErrorMessage
+            this._tempErrors['prevent-resolve'] = dynamicErrorMessage
         }
         this._preventResolve = true
     }
@@ -124,7 +96,6 @@ export class Field {
 
     dispose() {
         this._off()
-        this._errors.dispose()
 
         delete this._$el
         delete this._name
@@ -132,7 +103,7 @@ export class Field {
         delete this._vnode
         delete this._value
         delete this._preventInvalid
-        delete this._errors
+        delete this._tempErrors
         delete this._validEvent
         delete this._onValidate
         delete this._onInvalid
@@ -141,21 +112,6 @@ export class Field {
     //=============================================
     // GETTER / SETTER
     //=============================================
-    get errors() {
-        const nativeError = this._errorMessage
-        const errors = this._errors
-
-        if (nativeError && !this._$el.validity.customError) {
-            const attribute = getNativeAttribute(this._$el)
-
-            if (attribute) {
-                errors.add(attribute, nativeError)
-            }
-        }
-
-        return errors.list
-    }
-
     get noValidate():boolean {
         const { _$el } = this
         const noValidateInline = _$el.getAttribute('novalidate')
@@ -239,21 +195,16 @@ export class Field {
     }
 
     private _onValidate(e:Event) {
-        const { _vnode, _value } = this
-        const { type: eventName } = e
-        const arg:{
-            event:Event,
-            field: Field,
-            errors:{[x: string]: string} | null
-        } = { event: e, field: this, errors: null }
-
         this._prepareValidate()
-        
+
+        const { _vnode, _value, _tempErrors } = this
+        const { type: eventName } = e
+        const arg = { event: e, field: this, errors: _tempErrors }
+
         emit(_vnode, `validate:${eventName}`, arg)
         emit(_vnode, 'validate', arg)
 
         if (this._checkValidity(eventName)) {
-            
             emit(_vnode, `confirm:${eventName}`, arg)
             emit(_vnode, 'confirm', arg)
             
@@ -266,12 +217,11 @@ export class Field {
             }
         }
 
-        const errors = this.errors
-        arg.errors = errors
         emit(_vnode, 'reject', arg)
 
         if (!this._preventReject) {
-            _value.errors = errors
+            this._errorMessage = _tempErrors[Object.keys(_tempErrors)[0]]
+            _value.errors = _tempErrors
             this._updateValid(eventName, false)
             this._reportValidity()
         }
@@ -279,54 +229,38 @@ export class Field {
 
     private _prepareValidate() {
         this._errorMessage = ''
-        this._errors.reset()
+        this._tempErrors = {}
         this._value.resetError()
         this._preventResolve = false
         this._preventReject = false
     }
 
     private _checkValidity(eventName:string):boolean {
-        const { _$el } = this
-        return (
-            this.noValidate ||
-            !_$el.willValidate ||
-            (_$el.checkValidity() && this._checkCustomValidityByEvent(eventName))
-        )
-    }
-
-    private _checkCustomValidityByEvent(eventName:string):boolean {
-        const { _$el, _value } = this
+        const { _$el, _value, _tempErrors } = this
         const validations = _value.validations[eventName]
-        let customError = ''
 
-        if (validations && validations.length) {
-            const errors = []
+        if (this.noValidate || !_$el.willValidate) {
+            return true
+        }
 
-            for (let i = 0, len = validations.length, errs; i < len; i++) {
-                errs = Validator.check(validations[i], _$el)
-                if (errs.length) {
-                    errors.push(...errs)
+        if (!_$el.checkValidity()) {
+            const nativeError = this._errorMessage
+
+            if (nativeError && !_$el.validity.customError) {
+                const attribute = getNativeAttribute(_$el)
+                if (attribute) {
+                    _tempErrors[attribute] = nativeError
                 }
             }
-
-            for (let i = 0, len = errors.length, err; i < len; i++) {
-                err = errors[i]
-
-                if (!err || !err.msg) {
-                    continue
-                }
-
-                if (!customError) {
-                    customError = err.msg
-                }
-
-                this._errors.add(err.rule, err.msg)
+        }
+        
+        if (validations && validations.length) {
+            for (let i = 0, len = validations.length; i < len; i++) {
+                Object.assign(_tempErrors, Validator.check(validations[i], _$el))
             }
         }
 
-        this._errorMessage = customError
-
-        return !customError
+        return !Object.keys(_tempErrors).length
     }
 
     /**
