@@ -102,6 +102,7 @@ export class Field {
     //=============================================
     preventResolve(dynamicErrorMessage?:string) {
         if (dynamicErrorMessage) {
+            this._errors.add('prevent-resolve', dynamicErrorMessage)
             this._errorMessage = dynamicErrorMessage
         }
         this._preventResolve = true
