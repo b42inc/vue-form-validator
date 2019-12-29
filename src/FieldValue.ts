@@ -1,25 +1,38 @@
 import Vue from 'vue'
 import { FieldValueValidations } from '../@types'
+import { WatchOptions } from 'vue/types/umd'
 
 type Errors = {[key:string]: string}
+type ReactValues = {
+    value:string
+    valid:boolean
+    validations: FieldValueValidations
+    errors:Errors
+}
+type _Vue = Vue & ReactValues
 
 export class FieldValue {
     name: string
-    value: string = ''
-    valid: boolean = false
-    errors: Errors  = {}
-    private _validations: FieldValueValidations = {}
+    private _vm:_Vue
 
     constructor(name:string, initValue:string, validations:FieldValueValidations) {
         this.name = name
+        this._vm = new Vue({
+            data: {
+                value: initValue,
+                valid: false,
+                errors: {},
+                validations: {}
+            }
+        })
+
         this.validations = validations
-        Vue.set(this, 'value', initValue)
-        Vue.set(this, 'valid', this.valid)
-        Vue.set(this, 'errors', this.errors)
     }
 
     resetError() {
-        this.errors = {}
+        if (this.hasError()) {
+            this.errors = {}
+        }
     }
 
     hasError() {
@@ -30,18 +43,46 @@ export class FieldValue {
         return !!this.validations[eventName]
     }
 
+    watch(expOrFn: string, callback: (this: any, n: any, o: any) => void, options?: WatchOptions):(() => void) {
+        return this._vm.$watch(expOrFn, callback, options)
+    }
+
+    set value(value:string) {
+        this._vm.value = value
+    }
+
+    get value():string {
+        return this._vm.value
+    }
+
+    set valid(value:boolean) {
+        this._vm.valid = value
+    }
+
+    get valid():boolean {
+        return this._vm.valid
+    }
+
+    set errors(errors:Errors) {
+        this._vm.errors = errors
+    }
+
+    get errors():Errors {
+        return this._vm.errors
+    }
+
     set validations(validations:FieldValueValidations) {
         const _validations:FieldValueValidations = {}
 
         for (const eventName in validations) {
             const code = validations[eventName]
-            _validations[eventName] = typeof code === 'string' ? [code] : code
+            _validations[eventName] = code ? (typeof code === 'string' ? [code] : code) : []
         }
 
-        this._validations = _validations
+        this._vm.validations = _validations
     }
 
     get validations() {
-        return this._validations
+        return this._vm.validations
     }
 }

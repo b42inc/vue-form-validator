@@ -2,8 +2,7 @@ import { VNode } from 'vue'
 import { HTMLFieldElement } from '../../@types'
 import { Field } from '../Field'
 import { FieldValue } from '../FieldValue'
-import { DirectiveBinding } from 'vue/types/options'
-import { VueConstructor } from 'vue/types/umd'
+import { VueConstructor, VNodeDirective } from 'vue/types/umd'
 
 function createEvent(type:string) {
     try {
@@ -15,18 +14,23 @@ function createEvent(type:string) {
     }
 }
 
+function getDirective(vnode:VNode, directiveName:string):VNodeDirective | undefined {
+    if (!vnode.data || !vnode.data.directives) {
+        return
+    }
+
+    return vnode.data.directives.find(directive => directive.name === directiveName)
+}
+
 export default (Vue:VueConstructor) => {
     const map = new WeakMap()
 
     Vue.directive('valid', {
-        // bind() {},
-
-        inserted(el:HTMLElement, binding:DirectiveBinding, vnode:VNode) {
+        inserted(el, binding, vnode) {
             const { prevent } = binding.modifiers
             const value:FieldValue = binding.value
             const field = new Field(el as HTMLFieldElement, vnode, value, {
-                preventInvalid: !!prevent,
-                validEvent: Object.keys(value.validations)
+                preventInvalid: !!prevent
             })
 
             // 初期値のvalidation
@@ -37,11 +41,18 @@ export default (Vue:VueConstructor) => {
             map.set(el, field)
         },
 
-        // TODO: 更新に対応させる
-        // update(el, binding, vnode) {},
-        // componentUpdated(el, binding, vnode, oldVnode) {},
+        componentUpdated(el, binding, vnode, oldVnode) {
+            const current = getDirective(vnode, 'valid')
+            const old = getDirective(oldVnode, 'valid')
 
-        unbind(el:HTMLElement) {
+            if (current && old && current.value !== old.value) {
+                const field:Field = map.get(el)
+                const value:FieldValue = binding.value
+                field.update(vnode, value)
+            }
+        },
+
+        unbind(el) {
             const field:Field = map.get(el)
             if (field) {
                 field.dispose()

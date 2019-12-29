@@ -3,6 +3,8 @@ import { HTMLFieldElement, FieldOptions } from '../@types'
 import { FieldValue } from './FieldValue'
 import { Validator } from './Validator'
 
+const DEFAULT_VALID_EVENTS = ['input', 'change']
+
 function getNativeAttribute($el:HTMLFieldElement):string {
     const {
         valueMissing,
@@ -73,7 +75,8 @@ export class Field {
     private _errors:FieldErrors
     private _preventResolve:boolean = false
     private _preventReject:boolean = false
-    private _validEvent:string[]
+    private _validEvent:string[] = []
+    private _unwatches:Function[] = []
 
     constructor(el:HTMLFieldElement,
                 vnode:VNode,
@@ -83,18 +86,17 @@ export class Field {
         const { name, type } = el
 
         el.value = value.value
-       
+
         this._$el = el
+        this._value = value
         this._name = name
         this._type = type || ''
         this._vnode = vnode
-        this._value = value
         this._preventInvalid = options.preventInvalid || false
         this._errors = new FieldErrors()
-        this._validEvent = options.validEvent || ['input', 'change']
         this._onValidate = this._onValidate.bind(this)
         this._onInvalid = this._onInvalid.bind(this)
-        this._on()
+        this._initEvent()
     }
 
     //=============================================
@@ -110,6 +112,13 @@ export class Field {
 
     preventReject() {
         this._preventReject = true
+    }
+
+    update(vnode:VNode, value:FieldValue) {
+        this._$el.value = value.value
+        this._value = value
+        this._vnode = vnode
+        this._initEvent()
     }
 
     dispose() {
@@ -174,8 +183,33 @@ export class Field {
     // PRIVATE METHODS
     //=============================================
 
+    private _initEvent() {
+        const { _validEvent } = this
+        const validEvents = ((validations) => {
+            const validEvents = Object.keys(validations)
+            return validEvents.length ? validEvents : DEFAULT_VALID_EVENTS
+        })(this._value.validations)
+        
+        if (_validEvent.length === validEvents.length && _validEvent.every(eventName => validEvents.includes(eventName))) {
+            return
+        }
+
+        this._off()
+        this._validEvent = validEvents
+        this._on()
+    }
+
     private _on() {
-        const { _$el, _validEvent } = this
+        const { _$el, _validEvent, _value } = this
+
+        this._unwatches = [
+            _value.watch('value', (newVal) => {
+                if (_$el.value !== newVal) {
+                    _$el.value = newVal
+                }
+            }),
+            _value.watch('validations', () => this._initEvent())
+        ]
 
         _validEvent.forEach(eventName => {
             _$el.addEventListener(eventName, this._onValidate)
@@ -189,6 +223,8 @@ export class Field {
 
     private _off() {
         const { _$el, _validEvent } = this
+
+        this._unwatches.forEach(unwatch => unwatch())
 
         _validEvent.forEach(eventName => {
             _$el.removeEventListener(eventName, this._onValidate)

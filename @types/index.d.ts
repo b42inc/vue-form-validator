@@ -1,7 +1,6 @@
 export type HTMLFieldElement = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
 
 export type FieldOptions = {
-    validEvent?: string[],
     preventInvalid?: boolean
 }
 
