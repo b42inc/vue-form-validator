@@ -8,20 +8,17 @@ export declare class Field {
     private _preventInvalid;
     private _name;
     private _type;
-    private _errors;
     private _preventResolve;
     private _preventReject;
     private _validEvent;
     private _valids;
     private _unwatches;
+    private _tempErrors;
     constructor(el: HTMLFieldElement, vnode: VNode, value: FieldValue, options?: FieldOptions);
     preventResolve(dynamicErrorMessage?: string): void;
     preventReject(): void;
     update(vnode: VNode, value: FieldValue): void;
     dispose(): void;
-    get errors(): {
-        [x: string]: string;
-    };
     get noValidate(): boolean;
     get name(): string;
     get value(): string;
@@ -32,7 +29,6 @@ export declare class Field {
     private _onValidate;
     private _prepareValidate;
     private _checkValidity;
-    private _checkCustomValidityByEvent;
     private _reportValidity;
     private _onInvalid;
     private _updateValid;

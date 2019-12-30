@@ -31,29 +31,6 @@ function emit(vnode, name, data) {
             handler(data);
     }
 }
-class FieldErrors {
-    constructor() {
-        this._list = {};
-    }
-    add(attr, error) {
-        attr = attr.trim();
-        error = error.trim();
-        if (attr && error) {
-            this._list[attr] = error;
-        }
-    }
-    reset() {
-        for (const attr in this._list) {
-            delete this._list[attr];
-        }
-    }
-    dispose() {
-        delete this._list;
-    }
-    get list() {
-        return { ...this._list };
-    }
-}
 class Field {
     constructor(el, vnode, value, options = {}) {
         this._preventResolve = false;
@@ -61,6 +38,7 @@ class Field {
         this._validEvent = [];
         this._valids = {};
         this._unwatches = [];
+        this._tempErrors = {};
         const { name, type } = el;
         el.value = value.value;
         this._$el = el;
@@ -69,15 +47,13 @@ class Field {
         this._type = type || '';
         this._vnode = vnode;
         this._preventInvalid = options.preventInvalid || false;
-        this._errors = new FieldErrors();
         this._onValidate = this._onValidate.bind(this);
         this._onInvalid = this._onInvalid.bind(this);
         this._initEvent();
     }
     preventResolve(dynamicErrorMessage) {
         if (dynamicErrorMessage) {
-            this._errors.add('prevent-resolve', dynamicErrorMessage);
-            this._errorMessage = dynamicErrorMessage;
+            this._tempErrors['prevent-resolve'] = dynamicErrorMessage;
         }
         this._preventResolve = true;
     }
@@ -92,28 +68,16 @@ class Field {
     }
     dispose() {
         this._off();
-        this._errors.dispose();
         delete this._$el;
         delete this._name;
         delete this._type;
         delete this._vnode;
         delete this._value;
         delete this._preventInvalid;
-        delete this._errors;
+        delete this._tempErrors;
         delete this._validEvent;
         delete this._onValidate;
         delete this._onInvalid;
-    }
-    get errors() {
-        const nativeError = this._errorMessage;
-        const errors = this._errors;
-        if (nativeError && !this._$el.validity.customError) {
-            const attribute = getNativeAttribute(this._$el);
-            if (attribute) {
-                errors.add(attribute, nativeError);
-            }
-        }
-        return errors.list;
     }
     get noValidate() {
         const { _$el } = this;
@@ -176,10 +140,10 @@ class Field {
         _$el.removeEventListener('invalid', this._onInvalid);
     }
     _onValidate(e) {
-        const { _vnode, _value } = this;
-        const { type: eventName } = e;
-        const arg = { event: e, field: this, errors: null };
         this._prepareValidate();
+        const { _vnode, _value, _tempErrors } = this;
+        const { type: eventName } = e;
+        const arg = { event: e, field: this, errors: _tempErrors };
         emit(_vnode, `validate:${eventName}`, arg);
         emit(_vnode, 'validate', arg);
         if (this._checkValidity(eventName)) {
@@ -192,53 +156,42 @@ class Field {
                 return;
             }
         }
-        const errors = this.errors;
-        arg.errors = errors;
         emit(_vnode, 'reject', arg);
         if (!this._preventReject) {
-            _value.errors = errors;
+            this._errorMessage = _tempErrors[Object.keys(_tempErrors)[0]];
+            _value.errors = _tempErrors;
             this._updateValid(eventName, false);
             this._reportValidity();
         }
     }
     _prepareValidate() {
         this._errorMessage = '';
-        this._errors.reset();
+        this._tempErrors = {};
         this._value.resetError();
         this._preventResolve = false;
         this._preventReject = false;
     }
     _checkValidity(eventName) {
-        const { _$el } = this;
-        return (this.noValidate ||
-            !_$el.willValidate ||
-            (_$el.checkValidity() && this._checkCustomValidityByEvent(eventName)));
-    }
-    _checkCustomValidityByEvent(eventName) {
-        const { _$el, _value } = this;
+        const { _$el, _value, _tempErrors } = this;
         const validations = _value.validations[eventName];
-        let customError = '';
-        if (validations && validations.length) {
-            const errors = [];
-            for (let i = 0, len = validations.length, errs; i < len; i++) {
-                errs = Validator_1.Validator.check(validations[i], _$el);
-                if (errs.length) {
-                    errors.push(...errs);
+        if (this.noValidate || !_$el.willValidate) {
+            return true;
+        }
+        if (!_$el.checkValidity()) {
+            const nativeError = this._errorMessage;
+            if (nativeError && !_$el.validity.customError) {
+                const attribute = getNativeAttribute(_$el);
+                if (attribute) {
+                    _tempErrors[attribute] = nativeError;
                 }
-            }
-            for (let i = 0, len = errors.length, err; i < len; i++) {
-                err = errors[i];
-                if (!err || !err.msg) {
-                    continue;
-                }
-                if (!customError) {
-                    customError = err.msg;
-                }
-                this._errors.add(err.rule, err.msg);
             }
         }
-        this._errorMessage = customError;
-        return !customError;
+        if (validations && validations.length) {
+            for (let i = 0, len = validations.length; i < len; i++) {
+                Object.assign(_tempErrors, Validator_1.Validator.check(validations[i], _$el));
+            }
+        }
+        return !Object.keys(_tempErrors).length;
     }
     _reportValidity() {
         const { _$el } = this;

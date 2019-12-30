@@ -42,17 +42,17 @@ function executeRule(el, ruleset) {
 }
 exports.Validator = {
     check(code, el) {
-        const errors = [];
+        const errors = {};
         if (code === null) {
-            return [];
+            return errors;
         }
-        return (RULESET[code] || [code]).reduce((memo, ruleset) => {
+        return (RULESET[code] || [code]).reduce((errors, ruleset) => {
             const msg = executeRule(el, ruleset);
             const rule = typeof ruleset === 'string' ? ruleset : ruleset.rule;
             if (rule && msg) {
-                memo.push({ msg, rule });
+                errors[rule] = msg;
             }
-            return memo;
+            return errors;
         }, errors);
     },
     defineRule(validCode, validate, error, defaultOptions) {
