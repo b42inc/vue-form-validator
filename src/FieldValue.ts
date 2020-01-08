@@ -15,7 +15,7 @@ export class FieldValue {
     name: string
     private _vm:_Vue
 
-    constructor(name:string, initValue:string, validations:FieldValueValidations) {
+    constructor(name:string, initValue:string, validations:FieldValueValidations | string[]) {
         this.name = name
         this._vm = new Vue({
             data: {
@@ -26,7 +26,7 @@ export class FieldValue {
             }
         })
 
-        this.validations = validations
+        this.setValidations(validations)
     }
 
     resetError() {
@@ -40,11 +40,40 @@ export class FieldValue {
     }
 
     hasEvent(eventName:string) {
-        return !!this.validations[eventName]
+        return !!this.getValidation(eventName)
     }
 
     watch(expOrFn: string, callback: (this: any, n: any, o: any) => void, options?: WatchOptions):(() => void) {
         return this._vm.$watch(expOrFn, callback, options)
+    }
+
+    // validations はset時の引数に幅があり、getの返り値と乖離があるので、getter/setterでなくmethodにする
+    setValidations(validations:FieldValueValidations | string[]) {
+        const _validations:FieldValueValidations = {}
+
+        if (Array.isArray(validations)) {
+            validations.forEach(eventName => _validations[eventName] = [])
+        } else {
+            for (const eventName in validations) {
+                const code = validations[eventName]
+                _validations[eventName] = code ? (typeof code === 'string' ? [code] : code) : []
+            }
+        }
+
+        // init event がある場合 その他含むすべてのvalidationを通す
+        if (_validations.init) {
+            _validations.init = Array.from(new Set(Object.values(_validations).flat(1)))
+        }
+
+        this._vm.validations = _validations
+    }
+
+    getValidations():FieldValueValidations {
+        return this._vm.validations
+    }
+
+    getValidation(eventName:string):string | string[] {
+        return this._vm.validations[eventName]
     }
 
     set value(value:string) {
@@ -69,25 +98,5 @@ export class FieldValue {
 
     get errors():Errors {
         return this._vm.errors
-    }
-
-    set validations(validations:FieldValueValidations) {
-        const _validations:FieldValueValidations = {}
-
-        for (const eventName in validations) {
-            const code = validations[eventName]
-            _validations[eventName] = code ? (typeof code === 'string' ? [code] : code) : []
-        }
-
-        // init event がある場合 その他含むすべてのvalidationを通す
-        if (_validations.init) {
-            _validations.init = Array.from(new Set(Object.values(_validations).flat(1)))
-        }
-
-        this._vm.validations = _validations
-    }
-
-    get validations() {
-        return this._vm.validations
     }
 }
