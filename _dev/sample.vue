@@ -11,17 +11,7 @@
                      @reject="handleReject" />
               <p v-if="id.hasError()">{{ id.errors }}</p>
           </label>
-          <label for="name">
-              <span :class="{'is-invalid': name.hasError(), 'is-valid':name.valid}">Name</span>:
-              <input type="text"
-                     id="name"
-                     name="name"
-                     v-valid="name"
-                     minlength="5"
-                     maxlength="20"
-                     required />
-              <p v-if="name.hasError()">{{ name.errors }}</p>
-          </label>
+          <Field v-bind="name" />
           <label for="email">
               <span :class="{'is-invalid': email.hasError(), 'is-valid':email.valid}">Email</span>:
               <input type="email" v-valid.prevent="email">
@@ -57,6 +47,7 @@
 
 <script>
 import { Validator, FieldValue } from '../src'
+import Field from './Field'
 
 Validator.defineRule(
     'id-allowed',
@@ -103,13 +94,23 @@ Validator.difineRuleset('pw-change', [
 
 export default {
     count:0,
+    components: {
+        Field
+    },
     data() {
         return {
             id: new FieldValue('id', 2220, {
                 init: null,
                 input: ['id', 'required']
             }),
-            name: new FieldValue('name', 'John Paul'),
+            name: {
+                label: 'Name',
+                name: 'name',
+                field: new FieldValue('name', 'John Paul', ['init', 'change', 'input']),
+                minlength: 5,
+                maxlength: 20,
+                required: true
+            },
             email: new FieldValue('email', 'test', {
                 init: null,
                 change: ['required']
@@ -191,7 +192,7 @@ export default {
             rePassword.reset()
         },
         handleChangeEvent() {
-            this.name.validations = this.$options.count++ % 2 ? { 'input': null } : { 'blur': null }
+            this.name.setValidations(this.$options.count++ % 2 ? { 'input': null } : { 'blur': null })
         },
         handleChangeValue() {
             this.id.value = Date.now()
