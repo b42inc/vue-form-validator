@@ -102,7 +102,7 @@ class Field {
         const validEvents = ((validations) => {
             const validEvents = Object.keys(validations);
             return validEvents.length ? validEvents : DEFAULT_VALID_EVENTS;
-        })(this._value.validations);
+        })(this._value.getValidations());
         if (_validEvent.length === validEvents.length && _validEvent.every(eventName => validEvents.includes(eventName))) {
             return;
         }
@@ -173,7 +173,7 @@ class Field {
     }
     _checkValidity(eventName) {
         const { _$el, _value, _tempErrors } = this;
-        const validations = _value.validations[eventName];
+        const validations = _value.getValidation(eventName);
         if (this.noValidate || !_$el.willValidate) {
             return true;
         }

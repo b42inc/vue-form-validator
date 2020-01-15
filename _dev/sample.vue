@@ -128,7 +128,7 @@ export default {
     computed: {
         allClear() {
             const {id, name, password, rePassword} = this
-            return id.valid && name.valid && password.valid && rePassword.valid
+            return id.valid && name.field.valid && password.valid && rePassword.valid
         }
     },
     methods: {
@@ -179,7 +179,7 @@ export default {
 
             this.$axios.post('/api', {
                 id: id.value,
-                name: name.value,
+                name: name.field.value,
                 password: password.value
             })
         },
@@ -187,12 +187,12 @@ export default {
         handleReset() {
             const {id, name, password, rePassword} = this
             id.reset()
-            name.reset()
+            name.field.reset()
             password.reset()
             rePassword.reset()
         },
         handleChangeEvent() {
-            this.name.setValidations(this.$options.count++ % 2 ? { 'input': null } : { 'blur': null })
+            this.name.field.setValidations(this.$options.count++ % 2 ? { input: null } : { blur: null })
         },
         handleChangeValue() {
             this.id.value = Date.now()

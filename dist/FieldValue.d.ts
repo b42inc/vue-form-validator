@@ -5,19 +5,17 @@ declare type Errors = {
 };
 export declare class FieldValue {
     name: string;
-    private _vm;
-    constructor(name: string, initValue: string, validations: FieldValueValidations);
+    value: string;
+    valid: boolean;
+    errors: Errors;
+    validations: FieldValueValidations;
+    constructor(name: string, initValue: string, validations: FieldValueValidations | string[]);
     resetError(): void;
     hasError(): boolean;
     hasEvent(eventName: string): boolean;
-    watch(expOrFn: string, callback: (this: any, n: any, o: any) => void, options?: WatchOptions): (() => void);
-    set value(value: string);
-    get value(): string;
-    set valid(value: boolean);
-    get valid(): boolean;
-    set errors(errors: Errors);
-    get errors(): Errors;
-    set validations(validations: FieldValueValidations);
-    get validations(): FieldValueValidations;
+    watch(exp: 'value' | 'errors' | 'valid' | 'validations', callback: (this: any, n: any, o: any) => void, options?: WatchOptions): (() => void);
+    setValidations(validations: FieldValueValidations | string[]): void;
+    getValidations(): FieldValueValidations;
+    getValidation(eventName: string): string | string[];
 }
 export {};
