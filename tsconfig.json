@@ -2,8 +2,9 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist/",
-    "target": "esnext",
+    "target": "es5",
     "module": "commonjs",
+    "lib": ["esnext", "dom"],
     "moduleResolution": "node",
     "baseUrl": ".",
     "paths": { "@/*": ["src/*"] },
@@ -20,7 +21,7 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "esModuleInterop": true,
-    "typeRoots" : ["@types"],
+    "typeRoots": ["@types"],
     "declaration": true
   },
   "include": ["src/**/*", "@types"],
