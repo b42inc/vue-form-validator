@@ -1,29 +1,29 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const Field_1 = require("../Field");
+var Field_1 = require("../Field");
 function createEvent(type) {
     try {
         return new Event(type);
     }
     catch (_e) {
-        const event = document.createEvent('Event');
-        event.initEvent(type, true, true);
-        return event;
+        var event_1 = document.createEvent('Event');
+        event_1.initEvent(type, true, true);
+        return event_1;
     }
 }
 function getDirective(vnode, directiveName) {
     if (!vnode.data || !vnode.data.directives) {
         return;
     }
-    return vnode.data.directives.find(directive => directive.name === directiveName);
+    return vnode.data.directives.find(function (directive) { return directive.name === directiveName; });
 }
-exports.default = (Vue) => {
-    const map = new WeakMap();
+exports.default = (function (Vue) {
+    var map = new WeakMap();
     Vue.directive('valid', {
-        inserted(el, binding, vnode) {
-            const { prevent } = binding.modifiers;
-            const value = binding.value;
-            const field = new Field_1.Field(el, vnode, value, {
+        inserted: function (el, binding, vnode) {
+            var prevent = binding.modifiers.prevent;
+            var value = binding.value;
+            var field = new Field_1.Field(el, vnode, value, {
                 preventInvalid: !!prevent
             });
             if (value.hasEvent('init')) {
@@ -31,24 +31,24 @@ exports.default = (Vue) => {
             }
             map.set(el, field);
         },
-        componentUpdated(el, binding, vnode, oldVnode) {
-            const current = getDirective(vnode, 'valid');
-            const old = getDirective(oldVnode, 'valid');
+        componentUpdated: function (el, binding, vnode, oldVnode) {
+            var current = getDirective(vnode, 'valid');
+            var old = getDirective(oldVnode, 'valid');
             if (current && old && current.value !== old.value) {
-                const field = map.get(el);
-                const value = binding.value;
+                var field = map.get(el);
+                var value = binding.value;
                 field.update(vnode, value);
                 if (value.hasEvent('init')) {
                     el.dispatchEvent(createEvent('init'));
                 }
             }
         },
-        unbind(el) {
-            const field = map.get(el);
+        unbind: function (el) {
+            var field = map.get(el);
             if (field) {
                 field.dispose();
                 map.delete(el);
             }
         }
     });
-};
+});
