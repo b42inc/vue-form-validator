@@ -7,7 +7,6 @@ export declare class Field {
     private _value;
     private _preventInvalid;
     private _name;
-    private _type;
     private _preventResolve;
     private _preventReject;
     private _validEvent;

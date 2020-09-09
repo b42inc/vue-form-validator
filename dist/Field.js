@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Field = void 0;
 var Validator_1 = require("./Validator");
 var DEFAULT_VALID_EVENTS = ['input', 'change'];
 function getNativeAttribute($el) {
@@ -40,12 +41,11 @@ var Field = (function () {
         this._valids = {};
         this._unwatches = [];
         this._tempErrors = {};
-        var name = el.name, type = el.type;
+        var name = el.name;
         el.value = value.value;
         this._$el = el;
         this._value = value;
         this._name = name;
-        this._type = type || '';
         this._vnode = vnode;
         this._preventInvalid = options.preventInvalid || false;
         this._onValidate = this._onValidate.bind(this);
@@ -62,7 +62,9 @@ var Field = (function () {
         this._preventReject = true;
     };
     Field.prototype.update = function (vnode, value) {
-        this._$el.value = value.value;
+        if (this._$el) {
+            this._$el.value = value.value;
+        }
         this._value = value;
         this._vnode = vnode;
         this._initEvent();
@@ -70,19 +72,15 @@ var Field = (function () {
     Field.prototype.dispose = function () {
         this._off();
         delete this._$el;
-        delete this._name;
-        delete this._type;
         delete this._vnode;
         delete this._value;
-        delete this._preventInvalid;
-        delete this._tempErrors;
-        delete this._validEvent;
-        delete this._onValidate;
-        delete this._onInvalid;
     };
     Object.defineProperty(Field.prototype, "noValidate", {
         get: function () {
             var _$el = this._$el;
+            if (!_$el) {
+                return true;
+            }
             var noValidateInline = _$el.getAttribute('novalidate');
             var noValidate = typeof noValidateInline === 'string' && noValidateInline !== 'false';
             if (!_$el.form) {
@@ -90,32 +88,34 @@ var Field = (function () {
             }
             return _$el.form.noValidate || noValidate;
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     Object.defineProperty(Field.prototype, "name", {
         get: function () {
             return this._name;
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     Object.defineProperty(Field.prototype, "value", {
         get: function () {
-            return this._$el.value;
+            return this._$el ? this._$el.value : '';
         },
         set: function (value) {
-            this._$el.value = value;
+            if (this._$el) {
+                this._$el.value = value;
+            }
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     Field.prototype._initEvent = function () {
-        var _validEvent = this._validEvent;
-        var validEvents = (function (validations) {
+        var _a = this, _validEvent = _a._validEvent, _value = _a._value;
+        var validEvents = _value ? (function (validations) {
             var validEvents = Object.keys(validations);
             return validEvents.length ? validEvents : DEFAULT_VALID_EVENTS;
-        })(this._value.getValidations());
+        })(_value.getValidations()) : [];
         if (_validEvent.length === validEvents.length && _validEvent.every(function (eventName) { return validEvents.includes(eventName); })) {
             return;
         }
@@ -130,6 +130,9 @@ var Field = (function () {
     Field.prototype._on = function () {
         var _this = this;
         var _a = this, _$el = _a._$el, _validEvent = _a._validEvent, _value = _a._value;
+        if (!_$el || !_value) {
+            return;
+        }
         this._unwatches = [
             _value.watch('value', function (newVal) {
                 if (_$el.value !== newVal) {
@@ -148,6 +151,9 @@ var Field = (function () {
     Field.prototype._off = function () {
         var _this = this;
         var _a = this, _$el = _a._$el, _validEvent = _a._validEvent;
+        if (!_$el) {
+            return;
+        }
         this._unwatches.forEach(function (unwatch) { return unwatch(); });
         _validEvent.forEach(function (eventName) {
             _$el.removeEventListener(eventName, _this._onValidate);
@@ -159,6 +165,9 @@ var Field = (function () {
         var _a = this, _vnode = _a._vnode, _value = _a._value, _tempErrors = _a._tempErrors;
         var eventName = e.type;
         var arg = { event: e, field: this, errors: _tempErrors };
+        if (!_vnode || !_value) {
+            return;
+        }
         emit(_vnode, "validate:" + eventName, arg);
         emit(_vnode, 'validate', arg);
         if (this._checkValidity(eventName)) {
@@ -182,12 +191,15 @@ var Field = (function () {
     Field.prototype._prepareValidate = function () {
         this._errorMessage = '';
         this._tempErrors = {};
-        this._value.resetError();
+        this._value && this._value.resetError();
         this._preventResolve = false;
         this._preventReject = false;
     };
     Field.prototype._checkValidity = function (eventName) {
         var _a = this, _$el = _a._$el, _value = _a._value, _tempErrors = _a._tempErrors;
+        if (!_value || !_$el) {
+            return true;
+        }
         var validations = _value.getValidation(eventName);
         if (this.noValidate || !_$el.willValidate) {
             return true;
@@ -210,7 +222,7 @@ var Field = (function () {
     };
     Field.prototype._reportValidity = function () {
         var _$el = this._$el;
-        if (this._preventInvalid) {
+        if (this._preventInvalid || !_$el) {
             return;
         }
         if (typeof _$el.reportValidity === 'function') {
@@ -246,6 +258,9 @@ var Field = (function () {
     };
     Field.prototype._updateValid = function (eventName, isValid) {
         var _a = this, _valids = _a._valids, _value = _a._value;
+        if (!_value) {
+            return;
+        }
         if (eventName === 'init') {
             if (isValid) {
                 for (var ev in _valids) {
@@ -263,12 +278,12 @@ var Field = (function () {
     };
     Object.defineProperty(Field.prototype, "_errorMessage", {
         get: function () {
-            return this._$el.validationMessage;
+            return this._$el ? this._$el.validationMessage : '';
         },
         set: function (error) {
-            this._$el.setCustomValidity(error);
+            this._$el && this._$el.setCustomValidity(error);
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     return Field;

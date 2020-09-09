@@ -40,12 +40,11 @@ function emit(vnode:VNode, name:string, data:any) {
 }
 
 export class Field {
-    private _$el: HTMLFieldElement
-    private _vnode: VNode
-    private _value:FieldValue
+    private _$el: HTMLFieldElement | undefined
+    private _vnode: VNode | undefined
+    private _value:FieldValue | undefined
     private _preventInvalid: boolean
     private _name:string
-    private _type:string
     private _preventResolve:boolean = false
     private _preventReject:boolean = false
     private _validEvent:string[] = []
@@ -58,14 +57,13 @@ export class Field {
                 value:FieldValue,
                 options:FieldOptions = {}) {
         
-        const { name, type } = el
+        const { name } = el
 
         el.value = value.value
 
         this._$el = el
         this._value = value
         this._name = name
-        this._type = type || ''
         this._vnode = vnode
         this._preventInvalid = options.preventInvalid || false
         this._onValidate = this._onValidate.bind(this)
@@ -88,7 +86,10 @@ export class Field {
     }
 
     update(vnode:VNode, value:FieldValue) {
-        this._$el.value = value.value
+        if (this._$el) {
+            this._$el.value = value.value
+        }
+
         this._value = value
         this._vnode = vnode
         this._initEvent()
@@ -98,15 +99,10 @@ export class Field {
         this._off()
 
         delete this._$el
-        delete this._name
-        delete this._type
         delete this._vnode
         delete this._value
-        delete this._preventInvalid
-        delete this._tempErrors
-        delete this._validEvent
-        delete this._onValidate
-        delete this._onInvalid
+        // delete this._onValidate
+        // delete this._onInvalid
     }
 
     //=============================================
@@ -114,6 +110,11 @@ export class Field {
     //=============================================
     get noValidate():boolean {
         const { _$el } = this
+
+        if (!_$el) {
+            return true
+        }
+
         const noValidateInline = _$el.getAttribute('novalidate')
         const noValidate = typeof noValidateInline === 'string' && noValidateInline !== 'false'
 
@@ -129,11 +130,13 @@ export class Field {
     }
 
     get value():string {
-        return this._$el.value
+        return this._$el ? this._$el.value : ''
     }
 
     set value(value:string) {
-        this._$el.value = value
+        if (this._$el) {
+            this._$el.value = value
+        }
     }
 
     //=============================================
@@ -141,12 +144,12 @@ export class Field {
     //=============================================
 
     private _initEvent() {
-        const { _validEvent } = this
-        const validEvents = ((validations) => {
+        const { _validEvent, _value } = this
+        const validEvents = _value ? ((validations) => {
             const validEvents = Object.keys(validations)
             return validEvents.length ? validEvents : DEFAULT_VALID_EVENTS
-        })(this._value.getValidations())
-        
+        })(_value.getValidations()) : []
+
         if (_validEvent.length === validEvents.length && _validEvent.every(eventName => validEvents.includes(eventName))) {
             return
         }
@@ -162,6 +165,10 @@ export class Field {
 
     private _on() {
         const { _$el, _validEvent, _value } = this
+
+        if (!_$el || !_value) {
+            return
+        }
 
         this._unwatches = [
             _value.watch('value', (newVal) => {
@@ -185,6 +192,10 @@ export class Field {
     private _off() {
         const { _$el, _validEvent } = this
 
+        if (!_$el) {
+            return
+        }
+
         this._unwatches.forEach(unwatch => unwatch())
 
         _validEvent.forEach(eventName => {
@@ -200,6 +211,10 @@ export class Field {
         const { _vnode, _value, _tempErrors } = this
         const { type: eventName } = e
         const arg = { event: e, field: this, errors: _tempErrors }
+
+        if (!_vnode || !_value) {
+            return
+        }
 
         emit(_vnode, `validate:${eventName}`, arg)
         emit(_vnode, 'validate', arg)
@@ -230,13 +245,18 @@ export class Field {
     private _prepareValidate() {
         this._errorMessage = ''
         this._tempErrors = {}
-        this._value.resetError()
+        this._value && this._value.resetError()
         this._preventResolve = false
         this._preventReject = false
     }
 
     private _checkValidity(eventName:string):boolean {
         const { _$el, _value, _tempErrors } = this
+
+        if (!_value || !_$el) {
+            return true
+        }
+
         const validations = _value.getValidation(eventName)
 
         if (this.noValidate || !_$el.willValidate) {
@@ -269,7 +289,7 @@ export class Field {
     private _reportValidity() {
         const { _$el } = this
 
-        if (this._preventInvalid) {
+        if (this._preventInvalid || !_$el) {
             return
         }
 
@@ -314,6 +334,10 @@ export class Field {
     private _updateValid(eventName:string, isValid:boolean) {
         const { _valids, _value } = this
 
+        if (!_value) {
+            return
+        }
+
         if (eventName === 'init') {
             if (isValid) {
                 // initがvalid === すべての条件をクリアしたことになるので
@@ -335,10 +359,10 @@ export class Field {
     }
 
     private set _errorMessage(error:string) {
-        this._$el.setCustomValidity(error)
+        this._$el && this._$el.setCustomValidity(error)
     }
 
     private get _errorMessage():string {
-        return this._$el.validationMessage
+        return this._$el ? this._$el.validationMessage : ''
     }
 }

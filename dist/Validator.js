@@ -18,6 +18,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     return r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Validator = void 0;
 var RULES = {};
 var RULESET = {};
 function getError(el, error, options) {
