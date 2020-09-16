@@ -1,4 +1,3 @@
-import './polyfill';
 import { PluginObject } from 'vue/types/umd';
 import { Field } from './Field';
 import { FieldValue } from './FieldValue';
@@ -14,6 +13,6 @@ import './rules/required';
 import './rules/step';
 import './rules/string';
 import './rules/tel';
-declare const _default: PluginObject<{}>;
+declare const _default: PluginObject<undefined>;
 export default _default;
 export { FieldValue, Field, Validator };

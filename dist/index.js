@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Validator = exports.Field = exports.FieldValue = void 0;
-require("./polyfill");
+var polyfill_1 = __importDefault(require("./polyfill"));
 var valid_1 = __importDefault(require("./directives/valid"));
 var Field_1 = require("./Field");
 Object.defineProperty(exports, "Field", { enumerable: true, get: function () { return Field_1.Field; } });
@@ -25,6 +25,7 @@ require("./rules/string");
 require("./rules/tel");
 exports.default = {
     install: function (Vue) {
+        polyfill_1.default();
         valid_1.default(Vue);
     }
 };

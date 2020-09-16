@@ -1,5 +1,4 @@
-import './polyfill'
-
+import polyfill from './polyfill'
 import directive from './directives/valid'
 import { PluginObject } from 'vue/types/umd'
 import { Field} from './Field'
@@ -19,8 +18,9 @@ import './rules/tel'
 
 export default {
     install(Vue) {
+        polyfill()
         directive(Vue)
     }
-} as PluginObject<{}>
+} as PluginObject<undefined>
 
 export { FieldValue, Field, Validator }
