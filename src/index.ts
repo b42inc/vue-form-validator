@@ -1,3 +1,5 @@
+import './polyfill'
+
 import directive from './directives/valid'
 import { PluginObject } from 'vue/types/umd'
 import { Field} from './Field'

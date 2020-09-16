@@ -1,3 +1,4 @@
+import './polyfill';
 import { PluginObject } from 'vue/types/umd';
 import { Field } from './Field';
 import { FieldValue } from './FieldValue';
