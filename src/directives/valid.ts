@@ -2,7 +2,7 @@ import { VNode } from 'vue'
 import { HTMLFieldElement } from '../../@types'
 import { Field } from '../Field'
 import { FieldValue } from '../FieldValue'
-import { VueConstructor, VNodeDirective } from 'vue/types/umd'
+import { VueConstructor, VNodeDirective, DirectiveOptions } from 'vue/types/umd'
 
 function createEvent(type:string) {
     try {
@@ -22,45 +22,47 @@ function getDirective(vnode:VNode, directiveName:string):VNodeDirective | undefi
     return vnode.data.directives.find(directive => directive.name === directiveName)
 }
 
-export default (Vue:VueConstructor) => {
-    const map = new WeakMap()
+const map = new WeakMap()
 
-    Vue.directive('valid', {
-        inserted(el, binding, vnode) {
-            const { prevent } = binding.modifiers
+export const Directive: DirectiveOptions = {
+    inserted(el, binding, vnode) {
+        const { prevent } = binding.modifiers
+        const value:FieldValue = binding.value
+        const field = new Field(el as HTMLFieldElement, vnode, value, {
+            preventInvalid: !!prevent
+        })
+
+        if (value.hasEvent('init')) {
+            el.dispatchEvent(createEvent('init'))
+        }
+
+        map.set(el, field)
+    },
+
+    componentUpdated(el, binding, vnode, oldVnode) {
+        const current = getDirective(vnode, 'valid')
+        const old = getDirective(oldVnode, 'valid')
+
+        if (current && old && current.value !== old.value) {
+            const field:Field = map.get(el)
             const value:FieldValue = binding.value
-            const field = new Field(el as HTMLFieldElement, vnode, value, {
-                preventInvalid: !!prevent
-            })
+            field.update(vnode, value)
 
             if (value.hasEvent('init')) {
                 el.dispatchEvent(createEvent('init'))
             }
-
-            map.set(el, field)
-        },
-
-        componentUpdated(el, binding, vnode, oldVnode) {
-            const current = getDirective(vnode, 'valid')
-            const old = getDirective(oldVnode, 'valid')
-
-            if (current && old && current.value !== old.value) {
-                const field:Field = map.get(el)
-                const value:FieldValue = binding.value
-                field.update(vnode, value)
-
-                if (value.hasEvent('init')) {
-                    el.dispatchEvent(createEvent('init'))
-                }
-            }
-        },
-
-        unbind(el) {
-            const field:Field = map.get(el)
-            if (field) {
-                field.dispose()
-                map.delete(el)
-            }
         }
-    })
+    },
+
+    unbind(el) {
+        const field:Field = map.get(el)
+        if (field) {
+            field.dispose()
+            map.delete(el)
+        }
+    }
+}
+
+export default (Vue:VueConstructor, _options?: any) => {
+    Vue.directive('valid', Directive)
 }

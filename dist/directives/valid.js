@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Directive = void 0;
 var Field_1 = require("../Field");
 function createEvent(type) {
     try {
@@ -17,38 +18,39 @@ function getDirective(vnode, directiveName) {
     }
     return vnode.data.directives.find(function (directive) { return directive.name === directiveName; });
 }
-exports.default = (function (Vue) {
-    var map = new WeakMap();
-    Vue.directive('valid', {
-        inserted: function (el, binding, vnode) {
-            var prevent = binding.modifiers.prevent;
+var map = new WeakMap();
+exports.Directive = {
+    inserted: function (el, binding, vnode) {
+        var prevent = binding.modifiers.prevent;
+        var value = binding.value;
+        var field = new Field_1.Field(el, vnode, value, {
+            preventInvalid: !!prevent
+        });
+        if (value.hasEvent('init')) {
+            el.dispatchEvent(createEvent('init'));
+        }
+        map.set(el, field);
+    },
+    componentUpdated: function (el, binding, vnode, oldVnode) {
+        var current = getDirective(vnode, 'valid');
+        var old = getDirective(oldVnode, 'valid');
+        if (current && old && current.value !== old.value) {
+            var field = map.get(el);
             var value = binding.value;
-            var field = new Field_1.Field(el, vnode, value, {
-                preventInvalid: !!prevent
-            });
+            field.update(vnode, value);
             if (value.hasEvent('init')) {
                 el.dispatchEvent(createEvent('init'));
             }
-            map.set(el, field);
-        },
-        componentUpdated: function (el, binding, vnode, oldVnode) {
-            var current = getDirective(vnode, 'valid');
-            var old = getDirective(oldVnode, 'valid');
-            if (current && old && current.value !== old.value) {
-                var field = map.get(el);
-                var value = binding.value;
-                field.update(vnode, value);
-                if (value.hasEvent('init')) {
-                    el.dispatchEvent(createEvent('init'));
-                }
-            }
-        },
-        unbind: function (el) {
-            var field = map.get(el);
-            if (field) {
-                field.dispose();
-                map.delete(el);
-            }
         }
-    });
+    },
+    unbind: function (el) {
+        var field = map.get(el);
+        if (field) {
+            field.dispose();
+            map.delete(el);
+        }
+    }
+};
+exports.default = (function (Vue, _options) {
+    Vue.directive('valid', exports.Directive);
 });

@@ -1,11 +1,27 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Validator = exports.Field = exports.FieldValue = void 0;
-var polyfill_1 = __importDefault(require("./polyfill"));
-var valid_1 = __importDefault(require("./directives/valid"));
+exports.Directive = exports.Validator = exports.Field = exports.FieldValue = void 0;
+var valid_1 = __importStar(require("./directives/valid"));
+Object.defineProperty(exports, "Directive", { enumerable: true, get: function () { return valid_1.Directive; } });
 var Field_1 = require("./Field");
 Object.defineProperty(exports, "Field", { enumerable: true, get: function () { return Field_1.Field; } });
 var FieldValue_1 = require("./FieldValue");
@@ -23,9 +39,4 @@ require("./rules/required");
 require("./rules/step");
 require("./rules/string");
 require("./rules/tel");
-exports.default = {
-    install: function (Vue) {
-        polyfill_1.default();
-        valid_1.default(Vue);
-    }
-};
+exports.default = { install: valid_1.default };
