@@ -30,7 +30,7 @@
   },
   "homepage": "https://github.com/b42inc/vue-form-validator#readme",
   "dependencies": {
-    "b42-utility": "0.0.1",
+    "b42-utility": "https://github.com/b42inc/utility.git",
     "vue": "2.6.12"
   },
   "devDependencies": {
